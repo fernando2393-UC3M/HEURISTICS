@@ -1,0 +1,14 @@
+/*Parameters*/
+param Volume {i in TYPE};
+param Number {i in TYPE}; /*Num cases of each type: Type 1, Type 2, Type 3*/
+param Cost {i in TYPE};
+param Weight {i in TYPE};
+
+/* decision variables */
+var units {j in COMP} >=0; 
+
+/*Objective function*/
+minimize Cost: sum{i in LUG} Cost_TYPE[i]*units[j];
+
+/*Constraints*/
+s.t. Fin_hours : sum{i in LUG} Number[i]*Weight[i] <= 50;
