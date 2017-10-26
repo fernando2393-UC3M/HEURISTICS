@@ -1,14 +1,21 @@
 /*Parameters*/
 param Volume {i in TYPE};
-param Number {i in TYPE}; /*Num cases of each type: Type 1, Type 2, Type 3*/
-param Cost {i in TYPE};
+param Number {i in TYPE}; /*Num cases of each type to store: Type 1, Type 2, Type 3*/
+param Cost {i in TYPE}; 
 param Weight {i in TYPE};
+param Allowed_Weight {i in ALLOWED_WEIGHT};
+
+/*TYPE{M1, M2, M3}*/
+/*COMP{C1, C2, C3, C4, C5, C6}*/
+/*UNITCOMP{M1C1, M2C1, M}*/
 
 /* decision variables */
-var units {j in COMP} >=0; 
+var unitsPerComp {j in UNITCOMP} >=0; 
 
 /*Objective function*/
-minimize Cost: sum{i in LUG} Cost_TYPE[i]*units[j];
-
+minimize Cost: sum{i in LUG} Cost[i]*Number[i]- sum{j in COMP} Cost_TYPE[i]*unitsPerComp[i, j]; 
+	
 /*Constraints*/
-s.t. Fin_hours : sum{i in LUG} Number[i]*Weight[i] <= 50;
+s.t. Weight {j in Allowed_Weight}: sum{i in TYPE} unitsPerComp[i, j]*Weight[i] <= Allowed_Weight[j];
+s.t. Volume {j in Allowed_Volume}: sum{i in TYPE} unitsPerComp[i, j]*Volume[i] <= Allowed_Volume[j];
+
