@@ -1,23 +1,36 @@
-/*Parameters*/
-param Volume {i in TYPE};
-param Number {i in TYPE}; /*Num cases of each type to store: Type 1, Type 2, Type 3*/
-param Cost {i in TYPE}; 
-param Weight {i in TYPE};
-param Allowed_Weight {i in COMP};
-param Allowed_Volume {i in COMP}
 
-/*TYPE{M1, M2, M3}*/
-/*COMP{C1, C2, C3, C4, C5, C6}*/
+/*Sets*/
+set FLIGHTS;
+set TOTALCREW;
+set PILOTS within CREWTOTAL;
+set ATTENDANTS within CREWTOTAL;
+
+/*Parameters*/
+param costs {i in FLIGHTS, j in CREWTOTAL};
+param isEven {i in FLIGHTS, j in CREWTOTAL};
+param flightTime {i in FLIGHTS};
+param delay {i in FLIGHTS, j in FLIGHTS};
+
 
 /* decision variables */
-var unitsPerComp {i in TYPE, j in COMP} >=0; 
+var  x {i in TOTALCREW, j in FLIGHTS} binary;
 
 /*Objective function*/
-minimize Cost{i in TYPE}: sum{i in TYPE, j in COMP} Cost[i] * (Number[i] - sum{j in COMP} unitsPerComp[i, j]);
+minimize Cost: sum{i in FLIGHTS, j in CREW} costs[i, j]*x[i,j];
 
 /*Constraints*/
-s.t. Weight{j in COMP}: sum{i in TYPE} unitsPerComp[i, j]*Weight[i] <= Allowed_Weight[j];
-s.t. Volume{j in COMP}: sum{i in TYPE} unitsPerComp[i, j]*Volume[i] <= Allowed_Volume[j];
-s.t. Balance{j in NOSE, k in TAIL}: sum{i in TYPE} unitsPerComp[i, j]*Weight[i] >= 1.1*(sum{i in TYPE} unitsPerComp[i, k]*Weight[i]);
-s.t. Number{i in TYPE}: sum{i in COMP} unitsPerComp[i, j] <= Number[i];
 
+/*There is at least one pilot in every flight*/
+s.t. minPilots {i in FLIGHTS}: sum{j in PILOTS} x[i,j] >= 0;
+
+/*There is at least one flight attendant in every flight*/
+s.t. minAtt {i in FLIGHTS}: sum{j in ATTENDANTS} x[i,j] >= 0;
+
+/*The number of hours of the attendants must be higher than the number of hours of pilots*/
+s.t. hoursATT : sum{i in FLIGHTS} (flightTime[i] * sum{j in PILOTS} x[i,j]) <= sum{i in FLIGHTS} (flightTime[i] * sum{j in ATTENDANTS} x[i,j]);
+
+/*A pilot can take a flight*/
+/*
+Solo una idea basado en lo que ha dicho en clase, la sintaxis esta mal y a la funcion le faltaria el delay
+s.t. takeFlight {j in PILOTS, f1 in FLIGHTS, f2 in FLIGHTS, f1<>f2 AND f2<f1}: isEven[i,j]*x[i,j] -1>= 0;
+*/
