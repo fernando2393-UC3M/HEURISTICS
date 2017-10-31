@@ -5,15 +5,15 @@ data;
 	Pilot = P1, P2, P3
 	Assistant = A1, A2, A3*/
 
-set FLIGHT := V1 V2 V3 V4 V5 V6;
-set MAD := V1 V3 V5;
-set VALE := V2 V4 V6;
-set CREW := P1 P2 P3 A1 A2 A3;
-set PILOT := P1 P2 P3;
-set ATTEN := A1 A2 A3;
+set FLIGHTS := V1 V2 V3 V4 V5 V6;
+set MV := V1 V3 V5;
+set VM := V2 V4 V6;
+set TOTALCREW := P1 P2 P3 A1 A2 A3;
+set PILOTS := P1 P2 P3;
+set ATTENDANTS := A1 A2 A3;
 
 /*Cost of each attendant and pilot for each flight*/
-param Cost     :P1	P2	P3	A1	A2	A3 :=
+param costs     :P1	P2	P3	A1	A2	A3 :=
 	V1	20	28	27	17	16	15
 	V2	17	15	16	16	14	15
 	V3	25	23	24	14	12	14
@@ -22,7 +22,7 @@ param Cost     :P1	P2	P3	A1	A2	A3 :=
 	V6	22	21	29	12	11	19;
 
 /*Hours of assistants have to be more than the hours of the pilots in flight*/ /*Time of the flights*/
-param comparingHours :=
+param flightTime :=
 V1 75
 V2 90
 V3 105
@@ -34,15 +34,15 @@ V6 70;
 /*Resting time of the pilot 1 has to be at least 25 mins*/
 /*Resting time of the pilot 3 has to be no more than 30 mins*/
 
-param breakTime : 	V1				V2				V3				V4				V5			V6 :=
-	V1		0				45				195				315				480			605
-	V2		0				0				60				180				345			470
-	V3		6.02E+23			0				0				15				180			305
-	V4		0				6.02E+23			0				0				100			225
-	V5		6.02E+23			0				6.02E+23			0				0			50
-	V6		0				6.02E+23			0				6.02E+23			0			0;
-
-param breakPilot :=
+param breaks : 	V1				V2				V3				V4				V5			V6 :=
+	V1			0				45				195				315				480			605
+	V2			0				0				60				180				345			470
+	V3			6.02E+23		0				0				15				180			305
+	V4			0				6.02E+23		0				0				100			225
+	V5			6.02E+23		0				6.02E+23		0				0			50
+	V6			0				6.02E+23		0				6.02E+23		0			0;
+	
+param pilotBreak :=
 P1 60
 P2 25
 P3 30;
