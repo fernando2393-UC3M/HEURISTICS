@@ -32,7 +32,7 @@ param breaks : 	V1			V2			V3			V4			V5			V6 :=
 	V5			0			0			0			0			0			50
 	V6			0			0			0			0			0			0;
 
-	
+
 /*Duration of flight*/
 param flightTime :=
 V1 75
@@ -42,7 +42,7 @@ V4 65
 V5 75
 V6 70;
 
-/*Breaks of pilots*/	
+/*Breaks of pilots*/
 param pilotBreak :=
 P1 60
 P2 25
@@ -59,7 +59,7 @@ M1		22
 M2		18
 M3		11;
 
-param Cost:=
+param CostLUG:=
 M1		10
 M2		20
 M3		30;

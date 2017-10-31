@@ -22,7 +22,7 @@ param pilotBreak {i in PILOTS};
 /*For Luggage Distribution (Ex1)*/
 param Volume {i in TYPE};
 param Number {i in TYPE}; /*Num cases of each type to store: Type 1, Type 2, Type 3*/
-param Cost {i in TYPE}; 
+param CostLUG {i in TYPE};
 param Weight {i in TYPE};
 param NumberM {i in TYPE}; /*Num of cases to distribute*/
 param Allowed_Weight {i in COMP};
@@ -35,7 +35,7 @@ var x {i in FLIGHTS, j in TOTALCREW} binary;
 var unitsPerComp {i in TYPE, j in COMP} integer >= 0;
 
 /*Objective function*/
-minimize Cost: sum{i in FLIGHTS, j in TOTALCREW} (costs[i,j]/60)*flightTime[i]*x[i,j]+(sum{i in TYPE} Cost[i] * (NumberM[i] - sum{j in COMP} unitsPerComp[i, j]));
+minimize Cost: sum{i in FLIGHTS, j in TOTALCREW} (costs[i,j]/60)*flightTime[i]*x[i,j]+(sum{i in TYPE} CostLUG[i] * (NumberM[i] - sum{j in COMP} unitsPerComp[i, j]));
 
 /*Constraints*/
 
