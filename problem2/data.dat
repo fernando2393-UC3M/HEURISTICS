@@ -1,44 +1,43 @@
 data;
-/* data  section */
 
-set FLIGHTS := F1 F2 F3 F4 F5 F6;
-set CREWTOTAL := P1 P2 P3 A1 A2 A3;
+
+set FLIGHTS := V1 V2 V3 V4 V5 V6;
+set MV := V1 V3 V5; /*Flights from Madrid to Valencia*/
+set VM := V2 V4 V6; /*Flights from Valencia to Madrid*/
+set TOTALCREW := P1 P2 P3 A1 A2 A3;
 set PILOTS := P1 P2 P3;
 set ATTENDANTS := A1 A2 A3;
 
+/*Earnings of pilots per hour per flight*/
+param costs :P1		P2		P3		A1		A2		A3 :=
+		V1	 20		28		27		17		16		15
+		V2 	 17		15		16		16		14		15
+		V3	 25		23		24		14		12		14
+		V4	 34		35		31		14		15		11
+		V5	 31		37		35		11		17		15
+		V6	 22		21		29		12		11		19;
 
-param costs:      F1        F2       F3        F4        F5        F6  :=
-		        P1    20        17       25        34        31        22
-            P2    28        15       23        35        37        21
-            P3    27        16       24        31        35        29
-            A1    17        16       14        14        11        12
-            A2    16        14       12        15        17        11
-            A3    15        15       14        11        15        19;
 
-param isEven:      F1        F2       F3        F4        F5        F6  :=
-            P1    1        -1        1        -1         1        -1
-            P2    1        -1        1        -1         1        -1
-            P3    1        -1        1        -1         1        -1
-            A1    1        -1        1        -1         1        -1
-            A2    1        -1        1        -1         1        -1
-            A3    1        -1        1        -1         1        -1;
+param breaks : 	V1			V2			V3			V4			V5			V6 :=
+	V1			0			45			195			315			480			605
+	V2			0			0			60			180			345			470
+	V3			0			0			0			15			180			305
+	V4			0			0			0			0			100			225
+	V5			0			0			0			0			0			50
+	V6			0			0			0			0			0			0;
 
-param flightTime:=
-  F1    1.25;
-  F2    1.5;
-  F3    1.75;
-  F4    1.083;
-  F5    1.25;
-  F6    1,167;
+	
+/*Duration of flight*/
+param flightTime :=
+V1 75
+V2 90
+V3 105
+V4 65
+V5 75
+V6 70;
 
-/*  The only right values are the 0s, the diagonal ones should no matter and we have to calculate which flights can each pilot take according to his breaks (by hand)
-param delay:=    F1        F2       F3        F4        F5        F6  :=
-            F1    1        -1        1        -1         1        -1
-            F2    0         1        1        -1         1        -1
-            F3    0         0        1        -1         1        -1
-            F4    0         0        0         1         1        -1
-            F5    0         0        0         0         1        -1
-            F6    0         0        0         0         0         1;
-*/
-
-end;
+/*Breaks of pilots*/	
+param pilotBreak :=
+P1 60
+P2 25
+P3 30;
