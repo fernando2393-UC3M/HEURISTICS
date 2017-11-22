@@ -23,13 +23,13 @@ public static void main(String[] args) {
 
                 String parking[][] = new String [lane_number][locations];
 
-                while((line = bufferedreader.readLine()) != null){
-                  String car_info[] = line.split(" ");
-                  for (int i = 0; i < locations; i++) {
-                    parking[j][i] = car_info[i];
-                  }
-                  j++;
-                  System.out.println(line);
+                while((line = bufferedreader.readLine()) != null) {
+                        String car_info[] = line.split(" ");
+                        for (int i = 0; i < locations; i++) {
+                                parking[j][i] = car_info[i];
+                        }
+                        j++;
+                        System.out.println(line);
                 }
 
                 bufferedreader.close();
@@ -38,5 +38,5 @@ public static void main(String[] args) {
         catch(IOException ex) {
                 System.out.println("Error reading file '" + filename + "'");
         }
-      }
+}
 }
