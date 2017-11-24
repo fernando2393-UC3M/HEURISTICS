@@ -2,16 +2,19 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
 import java.io.IOException;
-// import org.jacop.core.BooleanVar;
-// import org.jacop.core.Store;
-// import org.jacop.jasat.utils.structures.IntVec;
-// import org.jacop.satwrapper.SatWrapper;
-// import org.jacop.search.DepthFirstSearch;
-// import org.jacop.search.IndomainMin;
-// import org.jacop.search.Search;
-// import org.jacop.search.SelectChoicePoint;
-// import org.jacop.search.SimpleSelect;
-// import org.jacop.search.SmallestDomain;
+
+import org.jacop.core.BooleanVar;
+import org.jacop.core.Store;
+import org.jacop.jasat.utils.structures.IntVec;
+import org.jacop.satwrapper.SatWrapper;
+import org.jacop.search.DepthFirstSearch;
+import org.jacop.search.IndomainMin;
+import org.jacop.search.Search;
+import org.jacop.search.SelectChoicePoint;
+import org.jacop.search.SimpleSelect;
+import org.jacop.search.SmallestDomain;
+import org.jacop.constraints.*;
+
 
 public class SATParking {
 public static void main(String[] args) {
@@ -42,6 +45,8 @@ public static void main(String[] args) {
                         System.out.println(line);
                 }
 
+                bufferedreader.close();
+
                 String categories[][] = new String [lane_number][locations];
                 for(int i = 0; i < lane_number; i++){
                   System.out.println(" ");
@@ -60,17 +65,25 @@ public static void main(String[] args) {
                   }
                 }
 
-                bufferedreader.close();
+                Store store = new Store();
+                SatWrapper satWrapper = new SatWrapper();
+                store.impose(satWrapper);
+
+                BooleanVar parking_mat[][] = new BooleanVar[lane_number][locations];
+                //Set bool variable only for the ones which have categories[i][j] different than "_"
+            		for(int i = 0; i < lane_number; i++){
+                  for(int k = 0; k < locations; k++){
+                    parking_mat[i][k] = new BooleanVar (store, "Car Type "+categories[i][k]+" arrived at "+arrival[i][k]+ " in "+i+","+k);
+                    satWrapper.register(parking_mat[i][j]);
+                  }
+                }
+
         }
 
         catch(IOException ex) {
                 System.out.println("Error reading file '" + filename + "'");
         }
 
-        // Store store = new Store();
-        // BooleanVar A = new BooleanVar(store, "Car of type A in tile");
-    		// BooleanVar B = new BooleanVar(store, "Car of type B in tile");
-    		// BooleanVar C = new BooleanVar(store, "Car of type C in tile");
 
 }
 }
