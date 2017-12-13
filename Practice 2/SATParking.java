@@ -48,21 +48,21 @@ public static void main(String[] args) {
                 bufferedreader.close();
 
                 String categories[][] = new String [lane_number][locations];
-                for(int i = 0; i < lane_number; i++){
-                  System.out.println(" ");
-                  for(int k = 0; k < locations; k++){
-                    categories[i][k] = String.valueOf(parking[i][k].charAt(0));
-                    System.out.print(categories[i][k]+" ");
-                  }
+                for(int i = 0; i < lane_number; i++) {
+                        System.out.println(" ");
+                        for(int k = 0; k < locations; k++) {
+                                categories[i][k] = String.valueOf(parking[i][k].charAt(0));
+                                System.out.print(categories[i][k]+" ");
+                        }
                 }
                 System.out.println("");
                 String arrival[][] = new String [lane_number][locations];
-                for(int i = 0; i < lane_number; i++){
-                  System.out.println(" ");
-                  for(int k = 0; k < locations; k++){
-                    arrival[i][k] = String.valueOf(parking[i][k].charAt(1));
-                    System.out.print(arrival[i][k]+" ");
-                  }
+                for(int i = 0; i < lane_number; i++) {
+                        System.out.println(" ");
+                        for(int k = 0; k < locations; k++) {
+                                arrival[i][k] = String.valueOf(parking[i][k].charAt(1));
+                                System.out.print(arrival[i][k]+" ");
+                        }
                 }
 
                 Store store = new Store();
@@ -70,13 +70,37 @@ public static void main(String[] args) {
                 store.impose(satWrapper);
 
                 BooleanVar parking_mat[][] = new BooleanVar[lane_number][locations];
-                //Set bool variable only for the ones which have categories[i][j] different than "_"
-            		for(int i = 0; i < lane_number; i++){
-                  for(int k = 0; k < locations; k++){
-                    parking_mat[i][k] = new BooleanVar (store, "Car Type "+categories[i][k]+" arrived at "+arrival[i][k]+ " in "+i+","+k);
-                    satWrapper.register(parking_mat[i][j]);
+                int int_parking_mat[][] = new int[lane_number][locations];
+                for(int i = 0; i < lane_number; i++) {
+                        for(int k = 0; k < locations; k++) {
+                                parking_mat[i][k] = new BooleanVar (store, "Car Type "+categories[i][k]+" arrived at "+arrival[i][k]+ " in "+i+","+k);
+                                satWrapper.register(parking_mat[i][j]);
+                                //Set bool variable true only for the ones which have categories[i][j] different than "_"
+                                if(categories[i][k].equals("_")) {
+                                        int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, false);
+                                }
+                                else{
+                                        int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 1, true);
+                                }
+
+                        }
+                }
+
+                //Now, we have to set values according to the categories and arrival times
+                for (int i = 0; i < lane_number; i++) {
+                  for (int k = 1; k < (locations-1); k++) {
+                    if ((categories[i][k].charAt(0)<categories[i][k-1].charAt(0)) && (categories[i][k].charAt(0)<categories[i][k+1].charAt(0))) {
+                      int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, false);
+                    }
+                    if ((categories[i][k].charAt(0)==categories[i][k-1].charAt(0)) && (categories[i][k].charAt(0)==categories[i][k+1].charAt(0))) {
+                      if ((Integer.parseInt(arrival[i][k])<Integer.parseInt(arrival[i][k-1])) && (Integer.parseInt(arrival[i][k])<Integer.parseInt(arrival[i][k+1]))) {
+                        int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, false);
+                      }
+                    }
                   }
                 }
+
+                //Here, we start comparisons between category and arrival time
 
         }
 
