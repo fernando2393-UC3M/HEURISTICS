@@ -53,6 +53,9 @@ public static void main(String[] args) {
                         System.out.println(" ");
                         for(int k = 0; k < locations; k++) {
                                 categories[i][k] = String.valueOf(parking[i][k].charAt(0));
+                                if (categories[i][k].equals("_")) {
+                                        categories[i][k] = "0";
+                                }
                                 System.out.print(categories[i][k]+" ");
                         }
                 }
@@ -62,151 +65,107 @@ public static void main(String[] args) {
                         System.out.println(" ");
                         for(int k = 0; k < locations; k++) {
                                 arrival[i][k] = String.valueOf(parking[i][k].charAt(1));
+                                if (arrival[i][k].equals("_")) {
+                                        arrival[i][k] = "0";
+                                }
                                 System.out.print(arrival[i][k]+" ");
                         }
                 }
 
+                //Here we create variables and matrices which will be used later
 
                 Store store = new Store();
                 SatWrapper satWrapper = new SatWrapper();
                 store.impose(satWrapper);
 
-                BooleanVar parking_mat[][] = new BooleanVar[lane_number][locations];
-                BooleanVar car_diff_front[][] = new BooleanVar[lane_number][locations];
-                BooleanVar car_diff_behind[][] = new BooleanVar[lane_number][locations];
-                BooleanVar car_same_front[][] = new BooleanVar[lane_number][locations];
-                BooleanVar car_same_behind[][] = new BooleanVar[lane_number][locations];
+                BooleanVar loc_A[][] = new BooleanVar[lane_number][locations];
+                int int_loc_A[][] = new BooleanVar[lane_number][locations];
+                BooleanVar loc_B[][] = new BooleanVar[lane_number][locations];
+                int int_loc_B[][] = new BooleanVar[lane_number][locations];
+                BooleanVar loc_C[][] = new BooleanVar[lane_number][locations];
+                int int_loc_C[][] = new BooleanVar[lane_number][locations];
+                BooleanVar loc_empty[][] = new BooleanVar[lane_number][locations];
+                int int_loc_empty[][] = new BooleanVar[lane_number][locations];
 
-                BooleanVar[] allVariables = new BooleanVar[]{parking_mat, car_diff_front, car_diff_behind, car_same_front, car_same_behind};
+                //Now we establish variables and clauses
 
-                //Literals matrix
-                int parking_mat_Lit[][] = new int[lane_number][locations];
-                int car_diff_front_Lit[][] = new int[lane_number][locations];
-                int car_diff_behind_Lit[][] = new int[lane_number][locations];
-                int car_same_front_Lit[][] = new int[lane_number][locations];
-                int car_same_behind_Lit[][] = new int[lane_number][locations];
+                for (int i = 0; i < lane_number; i++) {
+                        for (int k = 0; k < locations; k++) {
 
-                for(int i = 0; i < lane_number; i++) {
-                        for(int k = 0; k < locations; k++) {
-                                parking_mat[i][k] = new BooleanVar (store, "Car Type "+categories[i][k]+" arrived at "+arrival[i][k]+ " in "+i+","+k);
-                                satWrapper.register(parking_mat[i][k]);
-                                //CAR:0 NOCAR:1
-                                if(categories[i][k].equals("_")) {
-                                        parking_mat_Lit[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, true);
-                                }
-                                else{
-                                        parking_mat_Lit[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 1, true);
-                                }
-                        }
-                }
+                          loc_A[i][k] = new BooleanVar(store, "A: "+i+"/"+k);
 
-                //Fill literal matrices
-                for(int i = 0; i < lane_number; i++) {
-                        for(int k = 1; k < (locations-1); k++) {
-                                car_diff_front_Lit[i][k] = new BooleanVar (store, "Car "+i+k+" has in front a car with different class ");
-                                car_diff_behind_Lit[i][k] = new BooleanVar (store, "Car "+i+k+" has behind a car with different class ");
-                                car_same_front_Lit[i][k] = new BooleanVar (store, "Car "+i+k+" has in front a car with same class ");
-                                car_same_behind_Lit[i][k] = new BooleanVar (store, "Car "+i+k+" has in behind a car with same class ");
+                                switch(categories[i][k]) {
 
-                                satWrapper.register(car_diff_front_Lit);
-                                satWrapper.register(car_diff_behind_Lit);
-                                satWrapper.register(car_same_front_Lit);
-                                satWrapper.register(car_same_behind_Lit);
+                                case "A":
 
-                                //Different category for car front
-                                if(categories[i][k+1].charAt(0)>categories[i][k].charAt(0)) {
-                                        car_diff_front_Lit[i][k]=1; //BLOCKED
-                                }
+                                        loc_A[i][k] = new BooleanVar(store, "There is A car in " + i + "/" + k);
+                                        satWrapper.register(loc_A[i][k]);
+                                        int_loc_A[i][k] = satWrapper.cpVarToBoolVar(loc_A[i][k], 1, true);
 
-                                //Different category for car behind
-                                if(categories[i][k-1].charAt(0)>categories[i][k].charAt(0)) {
-                                        car_diff_behind_Lit[i][k]=1; //BLOCKED
-                                }
+                                        loc_B[i][k] = new BooleanVar(store, "There is no B car in " + i + "/" + k);
+                                        satWrapper.register(loc_B[i][k]);
+                                        int_loc_B[i][k] = satWrapper.cpVarToBoolVar(loc_B[i][k], 1, true);
 
-                                //Same category for car front
-                                if(categories[i][k+1].charAt(0)==categories[i][k].charAt(0)) {
-                                        //Check time of car front
-                                        if(Integer.parseInt(arrival[i][k+1])>Integer.parseInt(arrival[i][k])) {
-                                                car_same_front_Lit[i][k]=1; //BLOCKED
+                                        loc_C[i][k] = new BooleanVar(store, "There is no C car in " + i + "/" + k);
+                                        satWrapper.register(loc_C[i][k]);
+                                        int_loc_C[i][k] = satWrapper.cpVarToBoolVar(loc_C[i][k], 1, true);
+
+                                        loc_empty[i][k] = new BooleanVar(store, "There is no empty car in " + i + "/" + k);
+                                        satWrapper.register(loc_empty[i][k]);
+                                        int_loc_empty[i][k] = satWrapper.cpVarToBoolVar(loc_empty[i][k], 1, true);
+
+                                        if (k > 0 && k < (lane_number-1)) {
+                                                if (categories[i][k].charAt(0)>categories[i][k+1].charAt(0) && categories[i][k].charAt(0)>categories[i][k-1].charAt(0)) {
+                                                        addClause(satWrapper, loc_A[i][k+1], -loc_B[i][k+1], -loc_C[i][k+1], loc_empty[i][k+1]);
+                                                        addClause(satWrapper, loc_A[i][k-1], -loc_B[i][k-1], -loc_C[i][k-1], loc_empty[i][k-1]);
+                                                }
+                                                if (categories[i][k].charAt(0)==categories[i][k+1].charAt(0) && categories[i][k].charAt(0)==categories[i][k-1].charAt(0)) {
+                                                        if (Integer.parseInt(arrival[i][k])>Integer.parseInt(arrival[i][k+1]) && Integer.parseInt(arrival[i][k])>Integer.parseInt(arrival[i][k-1])) {
+                                                                addClause(satWrapper, loc_A[i][k+1], -loc_B[i][k+1], -loc_C[i][k+1], loc_empty[i][k+1]);
+                                                                addClause(satWrapper, loc_A[i][k-1], -loc_B[i][k-1], -loc_C[i][k-1], loc_empty[i][k-1]);
+                                                        }
+                                                }
                                         }
-                                        if(Integer.parseInt(arrival[i][k-1])>Integer.parseInt(arrival[i][k])) {
-                                                car_same_behind_Lit[i][k]=1; //BLOCKED
+                                        else{
+                                                addClause(satWrapper, loc_A[i][k], -loc_B[i][k], -loc_C[i][k], -loc_empty[i][k]);
                                         }
+                                        break;
+
+                                case "B":
+
+                                case "C":
+
+                                default:
+
                                 }
+
                         }
+
                 }
 
-                for(int i=0; i < lane_number; i++) {
-                        for(int k=1; k < locations-1; k++) {
-                                if(categories[i][k].charAt(0)=='A') {
-                                        //Ax,y && (Bx+1,y v Cx+1,y v Adx+1,y) && (Bx-1,y v Cx-1,y v Adx-1,y)
-                                        addClause(satWrapper, car_diff_front_Lit[i][k], car_same_front_Lit[i][k]);
-                                        addClause(satWrapper, car_diff_behind_Lit[i][k], car_same_behind_Lit[i][k]);
-                                        addClause(satWrapper, parking_mat_Lit[i][k]);
-                                }
-                                if(categories[i][k].charAt(0)=='B') {
-                                        //Bx,y && (Bdx+1,y v Cx+1,y) && (Bdx-1,y v Cx-1,y)
-                                        addClause(satWrapper, car_diff_front_Lit[i][k], car_same_front_Lit[i][k]);
-                                        addClause(satWrapper, car_diff_behind_Lit[i][k], car_same_behind_Lit[i][k]);
-                                        addClause(satWrapper, parking_mat_Lit[i][k]);
-                                }
-                                if(categories[i][k].charAt(0)=='C') {
-                                        //Cx,y && (Cdx+1,y) && (Cdx-1,y)
-                                        addClause(satWrapper, car_same_front_Lit[i][k]);
-                                        addClause(satWrapper, car_same_behind_Lit[i][k]);
-                                        addClause(satWrapper, parking_mat_Lit[i][k]);
-                                }
-                        }
-                }
+
+                //Here we solve the problem
 
                 Search<BooleanVar> search = new DepthFirstSearch<BooleanVar>();
                 SelectChoicePoint<BooleanVar> select = new SimpleSelect<BooleanVar>(allVariables, new SmallestDomain<BooleanVar>(), new IndomainMin<BooleanVar>());
                 Boolean result = search.labeling(store, select);
 
-                for(int i=0; i < lane_number; i++){
-                  for(int k=0; k < locations; k++){
-                    if (result) {
-                            System.out.println("Solution: ");
+                for(int i=0; i < lane_number; i++) {
+                        for(int k=0; k < locations; k++) {
+                                if (result) {
+                                        System.out.println("Solution: ");
 
-                            if(parking_mat[i][k].dom().value() == 1) {
-                                    System.out.println(parking_mat[i][k].id());
-                            }
+                                        if(parking_mat[i][k].dom().value() == 1) {
+                                                System.out.println(parking_mat[i][k].id());
+                                        }
+                                }
 
-                            if(car_diff_front[i][k].dom().value() == 1) {
-                                    System.out.println(car_diff_front[i][k].id());
-                            }
+                                else{
+                                        System.out.println("*** No");
+                                }
 
-                            if(car_diff_behind[i][k].dom().value() == 1) {
-                                    System.out.println(car_diff_behind[i][k].id());
-                            }
-
-                            if(car_same_front[i][k].dom().value() == 1) {
-                                    System.out.println(car_same_front[i][k].id());
-                            }
-
-                            if(car_same_behind[i][k].dom().value() == 1) {
-                                    System.out.println(car_same_behind[i][k].id());
-                            }
-                    } else{
-                            System.out.println("*** No");
-                    }
-
-                  }
+                        }
                 }
-
-                //   //Now, we have to set values according to the categories and arrival times
-                //  for (int i = 0; i < lane_number; i++) {
-                //    for (int k = 1; k < (locations-1); k++) {
-                //      if ((categories[i][k].charAt(0)<categories[i][k-1].charAt(0)) && (categories[i][k].charAt(0)<categories[i][k+1].charAt(0))) {
-                //        int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, false);
-                //      }
-                //      if ((categories[i][k].charAt(0)==categories[i][k-1].charAt(0)) && (categories[i][k].charAt(0)==categories[i][k+1].charAt(0))) {
-                //        if ((Integer.parseInt(arrival[i][k])<Integer.parseInt(arrival[i][k-1])) && (Integer.parseInt(arrival[i][k])<Integer.parseInt(arrival[i][k+1]))) {
-                //          int_parking_mat[i][k] = satWrapper.cpVarToBoolVar(parking_mat[i][k], 0, false);
-                //        }
-                //      }
-                //    }
-                //  }
 
         }
 
@@ -228,8 +187,6 @@ public static void addClause(SatWrapper satWrapper, int literal1, int literal2){
 public static void addClause(SatWrapper satWrapper, int literal1){
         IntVec clause = new IntVec(satWrapper.pool);
         clause.add(literal1);
-        clause.add(literal2);
-        clause.add(literal3);
         satWrapper.addModelClause(clause.toArray());
 }
 }
