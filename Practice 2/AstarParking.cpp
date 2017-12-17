@@ -33,7 +33,13 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
   }
 
   h = abs(init_lane-goal_lane)+abs(init_column-goal_column);
-  cout << h << endl;
+  if(h>0){
+    cout << "Initial lane: "<< init_lane << endl;
+    cout << "Initial column: "<< init_column << endl;
+    cout << "Goal lane: "<< goal_lane << endl;
+    cout << "Goal column: "<< goal_column << endl;
+    cout << endl;
+  }
   return h;
 }
 
@@ -42,6 +48,8 @@ void astar_search(){
 }
 
 int main(int argc, char const *argv[]) {
+
+        int totalheuristic = 0;
 
         vector<string> initialcars;
         string aux;
@@ -118,7 +126,14 @@ int main(int argc, char const *argv[]) {
           cout << endl;
         }
 
-        heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, "A3");
+        for (int i = 0; i < lane_number; i++) {
+          for (int j = 0; j < locations; j++) {
+            totalheuristic = heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]) + totalheuristic;
+          }
+        }
+
+        cout << endl;
+        cout << "The total heuristic is: " << totalheuristic << endl;
 
         return 0;
 }
