@@ -5,6 +5,42 @@
 
 using namespace std;
 
+int heuristic(vector <string> init, vector <string> goal, int lane_number, int locations, string car){
+  //Here we introduce the initial and goal position and calculate the heuristic (minimum cost from init to goal)
+  int h;
+  int init_lane;
+  int init_column;
+  int goal_lane;
+  int goal_column;
+
+  for (int i = 0; i < lane_number; i++) {
+    for (int j = 0; j < locations; j++) {
+      if (init[i*locations+j]==car) {
+        init_lane=i;
+        init_column=j;
+        break;
+      }
+    }
+  }
+  for (int i = 0; i < lane_number; i++) {
+    for (int j = 0; j < locations; j++) {
+      if (goal[i*locations+j]==car) {
+        goal_lane=i;
+        goal_column=j;
+        break;
+      }
+    }
+  }
+
+  h = abs(init_lane-goal_lane)+abs(init_column-goal_column);
+  cout << h << endl;
+  return h;
+}
+
+void astar_search(){
+
+}
+
 int main(int argc, char const *argv[]) {
 
         vector<string> initialcars;
@@ -27,11 +63,11 @@ int main(int argc, char const *argv[]) {
         initialcars.erase(initialcars.begin());
         initialcars.erase(initialcars.begin());
 
-        string init_parking_mat[lane_number][locations];
+        vector <string> init_parking_mat;
 
         for (int i = 0; i < lane_number; i++) {
           for (int j = 0; j < locations; j++) {
-            init_parking_mat[i][j] = initialcars[0];
+            init_parking_mat.push_back(initialcars[0]);
             initialcars.erase(initialcars.begin());
           }
         }
@@ -39,7 +75,7 @@ int main(int argc, char const *argv[]) {
         //First check print
         for (int i = 0; i < lane_number; i++) {
           for (int j = 0; j < locations; j++) {
-            cout << init_parking_mat[i][j] << " ";
+            cout << init_parking_mat[i*locations+j] << " ";
           }
           cout << endl;
         }
@@ -64,11 +100,11 @@ int main(int argc, char const *argv[]) {
         goalcars.erase(goalcars.begin());
         goalcars.erase(goalcars.begin());
 
-        string goal_parking_mat[lane_number][locations];
+        vector<string> goal_parking_mat;
 
         for (int i = 0; i < lane_number; i++) {
           for (int j = 0; j < locations; j++) {
-            goal_parking_mat[i][j] = goalcars[0];
+            goal_parking_mat.push_back(goalcars[0]);
             goalcars.erase(goalcars.begin());
           }
         }
@@ -77,12 +113,12 @@ int main(int argc, char const *argv[]) {
         cout << endl;
         for (int i = 0; i < lane_number; i++) {
           for (int j = 0; j < locations; j++) {
-            cout << goal_parking_mat[i][j] << " ";
+            cout << goal_parking_mat[i*locations+j] << " ";
           }
           cout << endl;
         }
 
-
+        heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, "A3");
 
         return 0;
 }
