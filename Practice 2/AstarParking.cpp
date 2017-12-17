@@ -13,20 +13,6 @@ using namespace std;
    Move to the end of another line: 4
  */
 
-// bool unfeasibility_checker(vector <string> init, int lane_number, int locations){
-//   for (int i = 0; i < lane_number; i++) {
-//     for (int j = 0; j < locations; j++) {
-//       if(init[i*locations+j]=="__"){
-//         return false;
-//       }
-//       else{
-//         cout << "This configuration is unfeasible. No free slots." << endl;
-//         return true;
-//       }
-//     }
-//   }
-// }
-
 int heuristic(vector <string> init, vector <string> goal, int lane_number, int locations, string car){
         //Here we introduce the initial and goal position and calculate the heuristic (minimum cost from init to goal)
         int h;
