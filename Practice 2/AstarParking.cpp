@@ -13,6 +13,20 @@ using namespace std;
    Move to the end of another line: 4
  */
 
+// bool unfeasibility_checker(vector <string> init, int lane_number, int locations){
+//   for (int i = 0; i < lane_number; i++) {
+//     for (int j = 0; j < locations; j++) {
+//       if(init[i*locations+j]=="__"){
+//         return false;
+//       }
+//       else{
+//         cout << "This configuration is unfeasible. No free slots." << endl;
+//         return true;
+//       }
+//     }
+//   }
+// }
+
 int heuristic(vector <string> init, vector <string> goal, int lane_number, int locations, string car){
         //Here we introduce the initial and goal position and calculate the heuristic (minimum cost from init to goal)
         int h;
@@ -44,38 +58,49 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
         return h;
 }
 
-void astar_search(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
 
-        int totalheuristic = 0;
-        int heuristic_mat[lane_number][locations];
+// void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat){
+//
+//   vector <vector <string> > closed_set;
+//   vector <vector <string> > open_set;
+//
+//   int totalcost;
+//
+// }
 
-
-        //Here we start the search selecting by ascendant heuristic order
-        for(int z = 1; z<(lane_number-1)+(locations-1); z++) {
-                for (int x = 0; x < lane_number; x++) {
-                        cout << endl;
-                        for (int y = 0; y < locations; y++) {
-                                //Checks the heuristic of each car from initial to goal position -> heuristic of the whole parking
-                                for (int i = 0; i < lane_number; i++) {
-                                        for (int j = 0; j < locations; j++) {
-                                                //Here we update the total heuristic for this iteration
-                                                totalheuristic += heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
-                                                //Map of heuristics creation for each car
-                                                heuristic_mat[i][j] = heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
-                                        }
-                                }
-                                cout << heuristic_mat[x][y];
-                                if(heuristic_mat[x][y]==z) {
-
-                                }
-                                totalheuristic = 0;
-                        }
-                }
-        }
-}
+// void astar_search(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
+//
+//         int totalheuristic = 0;
+//         int heuristic_mat[lane_number][locations];
+//
+//
+//         //Here we start the search selecting by ascendant heuristic order
+//         for(int z = 1; z<(lane_number-1)+(locations-1); z++) {
+//                 for (int x = 0; x < lane_number; x++) {
+//                         cout << endl;
+//                         for (int y = 0; y < locations; y++) {
+//                                 //Checks the heuristic of each car from initial to goal position -> heuristic of the whole parking
+//                                 for (int i = 0; i < lane_number; i++) {
+//                                         for (int j = 0; j < locations; j++) {
+//                                                 //Here we update the total heuristic for this iteration
+//                                                 totalheuristic += heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
+//                                                 //Map of heuristics creation for each car
+//                                                 heuristic_mat[i][j] = heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
+//                                         }
+//                                 }
+//                                 cout << heuristic_mat[x][y];
+//                                 if(heuristic_mat[x][y]==z) {
+//
+//                                 }
+//                                 totalheuristic = 0;
+//                         }
+//                 }
+//         }
+// }
 
 int main(int argc, char const *argv[]) {
 
+        int counter = 0;
         vector<string> initialcars;
         string aux;
 
@@ -151,7 +176,22 @@ int main(int argc, char const *argv[]) {
                 cout << endl;
         }
 
-        astar_search( init_parking_mat, goal_parking_mat, lane_number, locations);
+        for (int i = 0; i < lane_number; i++) {
+          for (int j = 0; j < locations; j++) {
+            if(init_parking_mat[i*locations+j]=="__"){
+            }
+            else{
+              counter++;
+            }
+          }
+        }
+
+        if (counter==(lane_number*locations)) {
+          cout << "Configuration unfeasible. No free slots." << endl;
+          return 0;
+        }
+
+        // astar_search( init_parking_mat, goal_parking_mat, lane_number, locations);
 
         return 0;
 }
