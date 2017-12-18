@@ -62,7 +62,7 @@ int cost(int lane_number, int loc, int initial_lane_number, int initial_loc, int
                         return 4;
                 }
         }
-        return 0;
+        return 5;
 }
 
 
@@ -70,12 +70,18 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
 
         vector <vector <string> > closed_set;
         vector <vector <string> > open_set;
+        vector <string> best_grid;
+        int initial_row = 0;
+        int initial_loc = 0;
+        int final_row = 0;
+        int final_loc = 0;
 
         open_set.push_back(init_parking_mat);
 
         int gscore = 0;
         int totalheuristic = 0;
         int fscore = 0;
+        int counter = 0;
 
         for (int i = 0; i < lane_number; i++) {
                 for (int j = 0; j < locations; j++) {
@@ -84,41 +90,93 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
                 }
         }
 
-        cout << totalheuristic << endl;
+        while(true){
 
+          for(int i = 0; i < lane_number; i++){
+            for(int j = 0; j < locations; j++){
+              if(init_parking_mat[i*locations+j]!=goal_parking_mat[i*locations+j]){
+                counter=1;
+              }
+            }
+          }
+
+          if(counter==0){
+            break;
+          }
+
+        for (int i = 0; i < lane_number; i++) {
+          for (int j = 0; j < locations; j++) {
+            if(j==0 || j==locations-1){
+              for (int k = 0; k < lane_number; k++) {
+                for (int l = 0; l < locations; l++) {
+                  if(init_parking_mat[i*locations+j]!="__"){
+                    if(init_parking_mat[k*locations+l]=="__"){
+                      if(i==0 & j==0){
+                        gscore = cost(k, l, i, j, locations);
+                        initial_row = i;
+                        initial_loc = j;
+                        final_row = k;
+                        final_loc = l;
+                      }
+                      else{
+                        int aux = cost(k, l, i, j, locations);
+                        if(aux < gscore){
+                          gscore = aux;
+                          initial_row = i;
+                          initial_loc = j;
+                          final_row = k;
+                          final_loc = l;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            else{
+              for (int k = 0; k < lane_number; k++){
+                for ( int l = 0; l < locations; l++){
+                  if((init_parking_mat[k*locations+l]=="__") && (init_parking_mat[i*locations+j]!="__" && (init_parking_mat[i*locations+j+1]=="__" || (init_parking_mat[i*locations+j-1]=="__")))){
+                    int aux = cost(k, l, i, j, locations);
+                    if(aux < gscore){
+                      gscore = aux;
+                      initial_row = i;
+                      initial_loc = j;
+                      final_row = k;
+                      final_loc = l;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        init_parking_mat[final_row*locations+final_loc] = init_parking_mat[initial_row*locations+initial_loc];
+        init_parking_mat[initial_row*locations+initial_loc] = "__";
+
+        cout << "The heuristic is: "<<totalheuristic << endl;
+        cout << "The cost is: " <<gscore << endl;
         fscore = gscore + totalheuristic;
+        cout << "The fscore is: " <<fscore << endl;
+        cout << "Initial row: " << initial_row << endl;
+        cout << "Initial loc: " << initial_loc << endl;
+        cout << "Final row: " << final_row << endl;
+        cout << "Final loc: " << final_loc << endl;
+        cout << "The next grid is: " << endl;
+
+        for (int i = 0; i < lane_number; i++) {
+                for (int j = 0; j < locations; j++) {
+                        cout << init_parking_mat[i*locations+j] << " ";
+                }
+                cout << endl;
+        }
+
+      }
+
+      cout << "Configurations. The final state has been reached." << '\n';
 
 }
-
-// void astar_search(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
-//
-//         int totalheuristic = 0;
-//         int heuristic_mat[lane_number][locations];
-//
-//
-//         //Here we start the search selecting by ascendant heuristic order
-//         for(int z = 1; z<(lane_number-1)+(locations-1); z++) {
-//                 for (int x = 0; x < lane_number; x++) {
-//                         cout << endl;
-//                         for (int y = 0; y < locations; y++) {
-//                                 //Checks the heuristic of each car from initial to goal position -> heuristic of the whole parking
-//                                 for (int i = 0; i < lane_number; i++) {
-//                                         for (int j = 0; j < locations; j++) {
-//                                                 //Here we update the total heuristic for this iteration
-//                                                 totalheuristic += heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
-//                                                 //Map of heuristics creation for each car
-//                                                 heuristic_mat[i][j] = heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
-//                                         }
-//                                 }
-//                                 cout << heuristic_mat[x][y];
-//                                 if(heuristic_mat[x][y]==z) {
-//
-//                                 }
-//                                 totalheuristic = 0;
-//                         }
-//                 }
-//         }
-// }
 
 int main(int argc, char const *argv[]) {
 
