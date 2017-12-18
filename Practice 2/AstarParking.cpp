@@ -45,14 +45,26 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
 }
 
 
-// void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat){
-//
-//   vector <vector <string> > closed_set;
-//   vector <vector <string> > open_set;
-//
-//   int totalcost;
-//
-// }
+void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
+
+        vector <vector <string> > closed_set;
+        vector <vector <string> > open_set;
+
+        open_set.push_back(init_parking_mat);
+
+        int gscore = 0;
+        int totalheuristic = 0;
+
+        for (int i = 0; i < lane_number; i++) {
+                for (int j = 0; j < locations; j++) {
+                        //Here we update the total heuristic for this iteration
+                        totalheuristic += heuristic(init_parking_mat, goal_parking_mat, lane_number, locations, init_parking_mat[i*locations+j]);
+                }
+        }
+
+        cout << totalheuristic << endl;
+
+}
 
 // void astar_search(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
 //
@@ -163,19 +175,21 @@ int main(int argc, char const *argv[]) {
         }
 
         for (int i = 0; i < lane_number; i++) {
-          for (int j = 0; j < locations; j++) {
-            if(init_parking_mat[i*locations+j]=="__"){
-            }
-            else{
-              counter++;
-            }
-          }
+                for (int j = 0; j < locations; j++) {
+                        if(init_parking_mat[i*locations+j]=="__") {
+                        }
+                        else{
+                                counter++;
+                        }
+                }
         }
 
         if (counter==(lane_number*locations)) {
-          cout << "Configuration unfeasible. No free slots." << endl;
-          return 0;
+                cout << "Configuration unfeasible. No free slots." << endl;
+                return 0;
         }
+
+        astar(init_parking_mat, goal_parking_mat, lane_number, locations);
 
         // astar_search( init_parking_mat, goal_parking_mat, lane_number, locations);
 
