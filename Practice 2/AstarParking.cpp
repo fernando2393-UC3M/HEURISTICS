@@ -44,6 +44,27 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
         return h;
 }
 
+//This function calculates the movement cost for each non-blocked car
+int cost(int lane_number, int loc, int initial_lane_number, int initial_loc, int locations){
+        if(lane_number==initial_lane_number) {
+                if(loc>initial_loc) {
+                        return 1;
+                }
+                else if(loc<initial_loc){
+                        return 2;
+                }
+        }
+        else{
+                if(loc==0) {
+                        return 3;
+                }
+                else if(loc==locations) {
+                        return 4;
+                }
+        }
+        return 0;
+}
+
 
 void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
 
@@ -54,6 +75,7 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
 
         int gscore = 0;
         int totalheuristic = 0;
+        int fscore = 0;
 
         for (int i = 0; i < lane_number; i++) {
                 for (int j = 0; j < locations; j++) {
@@ -63,6 +85,8 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
         }
 
         cout << totalheuristic << endl;
+
+        fscore = gscore + totalheuristic;
 
 }
 
