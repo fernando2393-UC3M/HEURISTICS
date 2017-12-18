@@ -52,6 +52,7 @@ public static void main(String[] args) {
                 //END PARSER
 
                 String categories[][] = new String [lane_number][locations];
+		System.out.print("CATEGORIES");
                 for(int i = 0; i < lane_number; i++) {
                         System.out.println(" ");
                         for(int k = 0; k < locations; k++) {
@@ -64,6 +65,7 @@ public static void main(String[] args) {
                 }
                 System.out.println("");
                 String arrival[][] = new String [lane_number][locations];
+		System.out.print("ARRIVAL");
                 for(int i = 0; i < lane_number; i++) {
                         System.out.println(" ");
                         for(int k = 0; k < locations; k++) {
@@ -90,7 +92,7 @@ public static void main(String[] args) {
                 BooleanVar empty_bh[][] = new BooleanVar[lane_number][locations];
                 int empty_bh_lit[][] = new int[lane_number][locations];
 
-		//CHECK IF NEEDED Car is an edge car
+		//Car is an edge car
                 BooleanVar edge[][] = new BooleanVar[lane_number][locations];
                 int edge_lit[][] = new int[lane_number][locations];
 
@@ -101,6 +103,12 @@ public static void main(String[] args) {
                 BooleanVar lowerCat_bh[][] = new BooleanVar[lane_number][locations];
                 int lowerCat_bh_lit[][] = new int[lane_number][locations];
 
+		//Car surrounded by equal category cars in adj positions
+                BooleanVar equalCat_fr[][] = new BooleanVar[lane_number][locations];
+                int equalCat_fr_lit[][] = new int[lane_number][locations];
+
+                BooleanVar equalCat_bh[][] = new BooleanVar[lane_number][locations];
+                int equalCat_bh_lit[][] = new int[lane_number][locations];
 
 		//Car surrounded by lower arrival time cars in adj positions
                 BooleanVar lowerArr_fr[][] = new BooleanVar[lane_number][locations];
@@ -110,34 +118,6 @@ public static void main(String[] args) {
                 int lowerArr_bh_lit[][] = new int[lane_number][locations];
 
 
-		//allVariables
-/*
-                BooleanVar allVariables[] = new BooleanVar[lane_number*(locations-2)*4];
-
-                for (int i = 0; i < lane_number; i++) {
-                        for (int k=1; k < (locations-2); k++) {
-                                allVariables[i*locations+k] = loc_A[i][k];
-                        }
-                }
-
-                for (int i = lane_number; i < 2*lane_number; i++) {
-                        for (int k=1; k < (locations-2); k++) {
-                                allVariables[i*locations+k] = loc_B[i-lane_number][k];
-                        }
-                }
-
-                for (int i = 2*lane_number; i < 3*lane_number; i++) {
-                        for (int k=1; k < (locations-2); k++) {
-                                allVariables[i*locations+k] = loc_C[i-2*lane_number][k];
-                        }
-                }
-
-                for (int i = 3*lane_number; i < 4*lane_number; i++) {
-                        for (int k=1; k < (locations-2); k++) {
-                                allVariables[i*locations+k] = loc_empty[i-3*lane_number][k];
-                        }
-                }
-*/
                 //Now we establish variables and clauses
 
                 for (int i = 0; i<lane_number; i++) {
@@ -151,7 +131,6 @@ public static void main(String[] args) {
                                 satWrapper.register(empty_bh[i][k]);
                                 empty_bh_lit[i][k] = satWrapper.cpVarToBoolVar(empty_bh[i][k], 1, true);
 
-				//CHECK IF NEEDED
                                 edge[i][k] = new BooleanVar(store, "edge " + i + "/" + k);
                                 satWrapper.register(edge[i][k]);
                                 edge_lit[i][k] = satWrapper.cpVarToBoolVar(edge[i][k], 1, true);
@@ -164,6 +143,14 @@ public static void main(String[] args) {
                                 satWrapper.register(lowerCat_bh[i][k]);
                                 lowerCat_bh_lit[i][k] = satWrapper.cpVarToBoolVar(lowerCat_bh[i][k], 1, true);
 
+                                equalCat_fr[i][k] = new BooleanVar(store, "equalCat_fr " + i + "/" + k);
+                                satWrapper.register(equalCat_fr[i][k]);
+                                equalCat_fr_lit[i][k] = satWrapper.cpVarToBoolVar(equalCat_fr[i][k], 1, true);
+
+                                equalCat_bh[i][k] = new BooleanVar(store, "equalCat_bh " + i + "/" + k);
+                                satWrapper.register(equalCat_bh[i][k]);
+                                equalCat_bh_lit[i][k] = satWrapper.cpVarToBoolVar(equalCat_bh[i][k], 1, true);
+
                                 lowerArr_fr[i][k] = new BooleanVar(store, "lowerArr_fr " + i + "/" + k);
                                 satWrapper.register(lowerArr_fr[i][k]);
                                 lowerArr_fr_lit[i][k] = satWrapper.cpVarToBoolVar(lowerArr_fr[i][k], 1, true);
@@ -172,70 +159,168 @@ public static void main(String[] args) {
                                 satWrapper.register(lowerArr_bh[i][k]);
                                 lowerArr_bh_lit[i][k] = satWrapper.cpVarToBoolVar(lowerArr_bh[i][k], 1, true);
 
-				/*loc_B[i][k] = new BooleanVar(store, "B " + i + "/" + k);
-                                satWrapper.register(loc_B[i][k]);
-                                int_loc_B[i][k] = satWrapper.cpVarToBoolVar(loc_B[i][k], 1, true);*/
-
                         }
                 }
 
 
                 for (int i = 0; i < lane_number; i++) {
+			addClause(satWrapper, edge_lit[i][0]);
+			addClause(satWrapper, edge_lit[i][locations-1]);
                         for (int k = 1; k < (locations-1); k++) {
-
+				addClause(satWrapper, -edge_lit[i][k]);
 				//FRONT
-				if(categories[i][k+1]){ //NOT BLOCKED
+				if(categories[i][k+1].charAt(0)=='0'){ //NOT BLOCKED
 					addClause(satWrapper, empty_fr_lit[i][k]);
+					System.out.println("Adding empty_fr_lit["+i+"]["+k+"]");
 				}
 				else{ //BLOCKED
 					addClause(satWrapper, -empty_fr_lit[i][k]);
-				}
-
-				if(categories[i][k].charAt(0)>categories[i][k+1].charAt(0)){ //NOT BLOCKED
-					addClause(satWrapper, lowerCat_fr_lit[i][k]);
-				}
-				else if(categories[i][k].charAt(0)==categories[i][k+1].charAt(0)){
-					if(arrival[i][k].charAt(0)>arrival[i][k+1].charAt(0)){ //NOT BLOCKED
-						addClause(satWrapper, lowerArr_fr_lit[i][k]);
-					}	
+					System.out.println("Adding empty_fr_lit["+i+"]["+k+"] BLOCKED");
+					if(categories[i][k].charAt(0)>categories[i][k+1].charAt(0)){ //NOT BLOCKED
+						addClause(satWrapper, lowerCat_fr_lit[i][k]);
+						addClause(satWrapper, -equalCat_fr_lit[i][k]);
+						System.out.println("Adding lowerCat_fr_lit["+i+"]["+k+"]");
+					}
+					else if(categories[i][k].charAt(0)==categories[i][k+1].charAt(0)){
+						addClause(satWrapper, -lowerCat_fr_lit[i][k]);
+						addClause(satWrapper, equalCat_fr_lit[i][k]);
+						if(arrival[i][k].charAt(0)>arrival[i][k+1].charAt(0)){ //NOT BLOCKED
+							addClause(satWrapper, lowerArr_fr_lit[i][k]);
+							System.out.println("Adding lowerArr_fr_lit["+i+"]["+k+"]");
+						}	
+						else{ //BLOCKED
+							addClause(satWrapper, -lowerArr_fr_lit[i][k]);
+							System.out.println("Adding lowerArr_fr_lit["+i+"]["+k+"] BLOCKED");
+						}			
+					}
 					else{ //BLOCKED
+						addClause(satWrapper, -lowerCat_fr_lit[i][k]);
+						addClause(satWrapper, -equalCat_fr_lit[i][k]);
 						addClause(satWrapper, -lowerArr_fr_lit[i][k]);
-					}			
-				}
-				else{ //BLOCKED
-					addClause(satWrapper, -lowerCat_fr_lit[i][k]);
+						System.out.println("Adding lowerCat_fr_lit["+i+"]["+k+"] BLOCKED");
+					}
 				}
 
 				//BEHIND
-				if(categories[i][k-1]){ //NOT BLOCKED
+				if(categories[i][k-1].charAt(0)=='0'){ //NOT BLOCKED
 					addClause(satWrapper, empty_bh_lit[i][k]);
+					System.out.println("Adding empty_bh_lit["+i+"]["+k+"]");
 				}
 				else{ //BLOCKED
 					addClause(satWrapper, -empty_bh_lit[i][k]);
-				}
-
-				if(categories[i][k].charAt(0)>categories[i][k-1].charAt(0)){ //NOT BLOCKED
-					addClause(satWrapper, lowerCat_bh_lit[i][k]);
-				}
-				else if(categories[i][k].charAt(0)==categories[i][k-1].charAt(0)){
-					if(arrival[i][k].charAt(0)>arrival[i][k-1].charAt(0)){ //NOT BLOCKED
-						addClause(satWrapper, lowerArr_bh_lit[i][k]);
-					}	
+					System.out.println("Adding empty_bh_lit["+i+"]["+k+"] BLOCKED");
+					if(categories[i][k].charAt(0)>categories[i][k-1].charAt(0)){ //NOT BLOCKED
+						addClause(satWrapper, lowerCat_bh_lit[i][k]);
+						addClause(satWrapper, -equalCat_bh_lit[i][k]);
+						System.out.println("Adding lowerCat_bh_lit["+i+"]["+k+"]");
+					}
+					else if(categories[i][k].charAt(0)==categories[i][k-1].charAt(0)){
+						addClause(satWrapper, -lowerCat_bh_lit[i][k]);
+						addClause(satWrapper, equalCat_bh_lit[i][k]);
+						if(arrival[i][k].charAt(0)>arrival[i][k-1].charAt(0)){ //NOT BLOCKED
+							addClause(satWrapper, lowerArr_bh_lit[i][k]);
+							System.out.println("Adding lowerArr_bh_lit["+i+"]["+k+"]");
+						}	
+						else{ //BLOCKED
+							addClause(satWrapper, -lowerArr_bh_lit[i][k]);
+							System.out.println("Adding lowerArr_bh_lit["+i+"]["+k+"] BLOCKED");
+						}			
+					}
 					else{ //BLOCKED
+						addClause(satWrapper, -lowerCat_bh_lit[i][k]);
+						addClause(satWrapper, -equalCat_bh_lit[i][k]);
 						addClause(satWrapper, -lowerArr_bh_lit[i][k]);
-					}			
+						System.out.println("Adding lowerCat_bh_lit["+i+"]["+k+"] BLOCKED");
+
+					}
 				}
-				else{ //BLOCKED
-					addClause(satWrapper, -lowerCat_bh_lit[i][k]);
-				}
 
-				addClause(satWrapper, empty_fr_lit[i][k], lowerCat_fr_lit[i][k], lowerArr_fr_lit[i][k], edge[i][k]);
-				addClause(satWrapper, empty_bh_lit[i][k], lowerCat_bh_lit[i][k], lowerArr_bh_lit[i][k], edge[i][k]);
-
-
+				System.out.print("\n");
+				addClause(satWrapper, empty_fr_lit[i][k], empty_bh_lit[i][k], edge_lit[i][k], lowerCat_fr_lit[i][k], lowerCat_bh_lit[i][k], equalCat_bh_lit[i][k], equalCat_fr_lit[i][k]);
+				addClause(satWrapper, empty_fr_lit[i][k], empty_bh_lit[i][k], edge_lit[i][k], lowerCat_fr_lit[i][k], lowerCat_bh_lit[i][k], lowerArr_bh_lit[i][k], equalCat_fr_lit[i][k]);
+				addClause(satWrapper, empty_fr_lit[i][k], empty_bh_lit[i][k], edge_lit[i][k], lowerCat_fr_lit[i][k], lowerCat_bh_lit[i][k], equalCat_bh_lit[i][k], lowerArr_fr_lit[i][k]);
+				addClause(satWrapper, empty_fr_lit[i][k], empty_bh_lit[i][k], edge_lit[i][k], lowerCat_fr_lit[i][k], lowerCat_bh_lit[i][k], lowerArr_bh_lit[i][k], lowerArr_fr_lit[i][k]);
                         }
 
                 }
+
+
+		//allVariables
+                BooleanVar allVariables[] = new BooleanVar[lane_number*(locations)*9];
+
+                for (int i = 0; i < lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = empty_fr[i][k];
+//				System.out.println("Matrix 1: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = lane_number; i < 2*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = empty_bh[i-lane_number][k];
+//				System.out.println("Matrix 2: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 2*lane_number; i < 3*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = edge[i-2*lane_number][k];
+//				System.out.println("Matrix 3: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 3*lane_number; i < 4*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = lowerCat_fr[i-3*lane_number][k];
+//				System.out.println("Matrix 4: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 4*lane_number; i < 5*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = lowerCat_bh[i-4*lane_number][k];
+//				System.out.println("Matrix 5: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 5*lane_number; i < 6*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = equalCat_fr[i-5*lane_number][k];
+//				System.out.println("Matrix 6: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 6*lane_number; i < 7*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = equalCat_bh[i-6*lane_number][k];
+//				System.out.println("Matrix 7: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+
+                for (int i = 7*lane_number; i < 8*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = lowerArr_fr[i-7*lane_number][k];
+//				System.out.println("Matrix 8: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
+                for (int i = 8*lane_number; i < 9*lane_number; i++) {
+                        for (int k=0; k < (locations); k++) {
+                                allVariables[i*locations+k] = lowerArr_bh[i-8*lane_number][k];
+//				System.out.println("Matrix 9: i= "+i+"; j= "+k);
+//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
+                        }
+                }
+
 
 
                 //Here we solve the problem
@@ -251,20 +336,40 @@ public static void main(String[] args) {
                         for(int i=0; i < lane_number; i++) {
                                 for(int k=0; k < locations; k++) {
 
-                                        if(loc_A[i][k].dom().value() == 1) {
-                                                System.out.println(loc_A[i][k].id());
+                                        if(empty_fr[i][k].dom().value() == 1) {
+                                                System.out.println(empty_fr[i][k].id());
                                         }
 
-                                        if(loc_B[i][k].dom().value() == 1) {
-                                                System.out.println(loc_B[i][k].id());
+                                        if(empty_bh[i][k].dom().value() == 1) {
+                                                System.out.println(empty_bh[i][k].id());
                                         }
 
-                                        if(loc_C[i][k].dom().value() == 1) {
-                                                System.out.println(loc_C[i][k].id());
+                                        if(edge[i][k].dom().value() == 1) {
+                                                System.out.println(edge[i][k].id());
                                         }
 
-                                        if(loc_empty[i][k].dom().value() == 1) {
-                                                System.out.println(loc_empty[i][k].id());
+                                        if(lowerCat_fr[i][k].dom().value() == 1) {
+                                                System.out.println(lowerCat_fr[i][k].id());
+                                        }
+
+                                        if(lowerCat_bh[i][k].dom().value() == 1) {
+                                                System.out.println(lowerCat_bh[i][k].id());
+                                        }
+
+                                        if(equalCat_fr[i][k].dom().value() == 1) {
+                                                System.out.println(equalCat_fr[i][k].id());
+                                        }
+
+                                        if(equalCat_bh[i][k].dom().value() == 1) {
+                                                System.out.println(equalCat_bh[i][k].id());
+                                        }
+
+                                        if(lowerArr_fr[i][k].dom().value() == 1) {
+                                                System.out.println(lowerArr_fr[i][k].id());
+                                        }
+
+                                        if(lowerArr_bh[i][k].dom().value() == 1) {
+                                                System.out.println(lowerArr_bh[i][k].id());
                                         }
                                 }
                         }
@@ -274,6 +379,7 @@ public static void main(String[] args) {
                         System.out.println("NO Satisfiable problem");
                 }
 
+
         }
 
         catch(IOException ex) {
@@ -281,6 +387,19 @@ public static void main(String[] args) {
         }
 
 }
+
+public static void addClause(SatWrapper satWrapper, int literal1, int literal2, int literal3, int literal4, int literal5, int literal6, int literal7){
+        IntVec clause = new IntVec(satWrapper.pool);
+        clause.add(literal1);
+        clause.add(literal2);
+        clause.add(literal3);
+        clause.add(literal4);
+        clause.add(literal5);
+        clause.add(literal6);
+        clause.add(literal7);
+        satWrapper.addModelClause(clause.toArray());
+}
+
 
 public static void addClause(SatWrapper satWrapper, int literal1, int literal2, int literal3, int literal4){
         IntVec clause = new IntVec(satWrapper.pool);
