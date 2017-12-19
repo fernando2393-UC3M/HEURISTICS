@@ -378,8 +378,9 @@ public static void main(String[] args) {
                             }
                         }
                         writer.println("\n");
-                      }
-                      writer.close();
+                       }
+                       writer.close();
+                       
                 }
                 else{
                         System.out.println("NO Satisfiable problem");
