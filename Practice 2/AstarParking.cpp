@@ -2,24 +2,21 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
-/*
-   Operations:
-   Move forward in the same line: 1
-   Move backward in the same line: 2
-   Move to the beginning of another line: 3
-   Move to the end of another line: 4
- */
+using clk = high_resolution_clock;
 
  struct openvec {
    int fscore;
    int gscore;
    int hscore;
    int id;
-   int comefrom;
-   vector <string> grid;
+   vector<string> grid;
+   int parent_node;
+   bool parent;
  };
 
 int heuristic(vector <string> init, vector <string> goal, int lane_number, int locations, string car){
@@ -35,7 +32,6 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
                         if (init[i*locations+j]==car) {
                                 init_lane=i;
                                 init_column=j;
-                                break;
                         }
                 }
         }
@@ -44,7 +40,6 @@ int heuristic(vector <string> init, vector <string> goal, int lane_number, int l
                         if (goal[i*locations+j]==car) {
                                 goal_lane=i;
                                 goal_column=j;
-                                break;
                         }
                 }
         }
@@ -120,11 +115,14 @@ int cost(vector <string> parking, int lane_number, int loc, int initial_lane_num
 }
 
 
-void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
+vector <string> astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, int lane_number, int locations){
 
         //struct vector <<closedvec> > closed_set;
+        int finalcost = 0;
+        vector <string> solution_gscore;
         vector <openvec> open_set;
         vector <openvec> closed_set;
+        vector <string> path;
         open_set.push_back(openvec());
         open_set[0].grid = init_parking_mat;
         open_set[0].id = 0;
@@ -141,36 +139,56 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
         open_set[0].hscore = hscore;
         open_set[0].gscore = 0;
         open_set[0].fscore = open_set[0].hscore + open_set[0].gscore;
+        open_set[0].parent_node = -1;
+        open_set[0].parent = false;
 
-        cout << "The fscore is: " << open_set[0].fscore << endl;
+         while(!open_set.empty()){
+           openvec current_vec;
 
-
-         while(open_set.size()!=0){
-           struct openvec current_vec;
            int minimum = open_set[0].fscore; //Minimum fscore found -> Initialized with first value of open_set
            //Here we look in the open_set list to find the grid with minimum fcost
            for (int i = 0; i < open_set.size(); i++) {
-             if(open_set.size()==1){
-               //If only one node is open, we automatically asign it to current_vec
-                 current_vec.id = open_set[i].id;
-                 current_vec.fscore = open_set[i].fscore;
-                 minimum = current_vec.fscore;
-                 current_vec.grid = open_set[i].grid;
-             }
-             else{
                if(open_set[i].fscore<=minimum){
                  current_vec.id = open_set[i].id;
                  current_vec.fscore = open_set[i].fscore;
                  minimum = current_vec.fscore;
+                 current_vec.hscore = open_set[i].hscore;
+                 current_vec.gscore = open_set[i].gscore;
                  current_vec.grid = open_set[i].grid;
+                 current_vec.parent_node = open_set[i].parent_node;
+                 current_vec.parent = open_set[i].parent;
                }
              }
-           }
 
-           if(loops>0){
-             cout << "Size of open_set it. " << loops << ": " << open_set.size() << endl;
-             cout << "The lower fscore is: " << current_vec.fscore << endl;
-           }
+
+             if(current_vec.hscore == 0){
+               finalcost = current_vec.fscore;
+               while(current_vec.parent_node!=0){
+                 for (int i = 0; i < lane_number; i++) {
+                   for(int j = 0; j < locations; j++){
+                     path.push_back(current_vec.grid[i*locations+j]);
+                   }
+                 }
+                 for(int i = 0; i < closed_set.size(); i++){
+                   if(current_vec.parent_node==closed_set[i].id){
+                     solution_gscore.push_back(to_string(current_vec.gscore));
+                     current_vec = closed_set[i];
+                   }
+                 }
+               }
+               for (int i = 0; i < lane_number; i++) {
+                 for(int j = 0; j < locations; j++){
+                   path.push_back(current_vec.grid[i*locations+j]);
+                 }
+               }
+               path.push_back(to_string(id_counter));
+               path.push_back(to_string(finalcost));
+               for(int i = 0; i < solution_gscore.size(); i++){
+                 path.push_back(solution_gscore[i]);
+               }
+               path.push_back(to_string(solution_gscore.size()));
+               return path;
+             }
 
            for(int i = 0; i<open_set.size(); i++){
              if(open_set[i].id==current_vec.id){
@@ -182,6 +200,7 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
 
            //Now we have the node with minimum cost
            vector <openvec> decendents;
+           struct openvec node;
 
            for(int i = 0; i<lane_number; i++){
              for(int j = 0; j<locations; j++){
@@ -189,29 +208,24 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
                  for(int l = 0; l<locations; l++){
                    if(current_vec.grid[i*locations+j]!="__" && current_vec.grid[k*locations+l]=="__"){
                      if(cost(current_vec.grid, k, l, i, j, locations)!=5){
-                       struct openvec node;
                        node.id = id_counter++;
-                       node.gscore = cost(current_vec.grid, k, l, i, j, locations) + current_vec.gscore; //COMPROBAR ESTO CON GABO
+                       node.gscore = cost(current_vec.grid, k, l, i, j, locations) + current_vec.gscore;
                        int auxscore = 0;
                        node.grid = current_vec.grid;
                        node.grid[k*locations+l]=node.grid[i*locations+j];
                        node.grid[i*locations+j]="__";
                        for (int x = 0; x < lane_number; x++) {
                          for (int y = 0; y < locations; y++) {
+                           if(node.grid[x*locations+y]!="__"){
                            auxscore += heuristic(node.grid, goal_parking_mat, lane_number, locations, node.grid[x*locations+y]);
+                          }
                          }
                        }
+                       node.parent_node = current_vec.id;
                        node.hscore = auxscore;
                        node.fscore = node.hscore + node.gscore;
-                       node.comefrom = current_vec.id;
+                       node.parent = true;
                        decendents.push_back(node);
-                       for (int w = 0; w < lane_number; w++) {  //Print of each grid to test its correct displayment
-                               for (int v = 0; v < locations; v++) {
-                                       cout << node.grid[w*locations+v] << " ";
-                               }
-                               cout << endl;
-                       }
-                       cout << endl;
                      }
                    }
                  }
@@ -219,40 +233,33 @@ void astar(vector <string> init_parking_mat, vector <string> goal_parking_mat, i
              }
            }
 
-           cout << "The number of decendents is: " << decendents.size() << endl;
-
-           for (int i = open_set.size(); i < decendents.size(); i++) { //Here I have changed i=0 by i=open_set.size(), put zero to check small number of cases, but wrong
-             open_set.push_back(openvec());
-             open_set[i].fscore = decendents[i].fscore;
-            //  cout << open_set[i].fscore << endl;
-             open_set[i].gscore = decendents[i].gscore;
-             open_set[i].hscore = decendents[i].hscore;
-             open_set[i].id = decendents[i].id;
-             open_set[i].comefrom = decendents[i].comefrom;
-             open_set[i].grid = decendents[i].grid;
-           }
-
-           for (int i = 0; i < open_set.size(); i++) {
-             cout << "The heuristic for decentdent " << i << " is " << open_set[i].hscore << endl;
-           }
-
-           loops++;
-           cout << "The number of iterations is: " << loops+1 << endl;
-
-           int goalheur = 1;
-           for (int i = 0; i < open_set.size(); i++) {
-             if(open_set[i].hscore==0){
-               goalheur = 0;
-             }
-           }
-           if(goalheur==0){ //Muy guarro -> arreglar
-             break;
+           for (int i = 0; i < decendents.size(); i++) {
+             int global_check = 0;
+            for(int j = 0; j<closed_set.size(); j++){
+              int repeate_check = 0;
+              for(int k = 0; k < lane_number; k++){
+                for(int l = 0; l < locations; l++){
+                  if(decendents[i].grid[k*locations+l]!=closed_set[j].grid[k*locations+l]){
+                    repeate_check++;
+                  }
+                }
+              }
+              if(repeate_check!=0){
+                global_check++;
+              }
+            }
+            if(global_check==closed_set.size()){
+              open_set.push_back(decendents[i]);
+            }
            }
        }
+       return path;
 }
 
 int main(int argc, char const *argv[]) {
 
+        auto t1 = clk::now();
+        int number_steps;
         int counter = 0;
         vector<string> initialcars;
         string aux;
@@ -281,14 +288,6 @@ int main(int argc, char const *argv[]) {
                         init_parking_mat.push_back(initialcars[0]);
                         initialcars.erase(initialcars.begin());
                 }
-        }
-
-        //First check print
-        for (int i = 0; i < lane_number; i++) {
-                for (int j = 0; j < locations; j++) {
-                        cout << init_parking_mat[i*locations+j] << " ";
-                }
-                cout << endl;
         }
 
         //Here, we get the data from the goal file
@@ -320,15 +319,6 @@ int main(int argc, char const *argv[]) {
                 }
         }
 
-        // //Second check print
-        // cout << endl;
-        // for (int i = 0; i < lane_number; i++) {
-        //         for (int j = 0; j < locations; j++) {
-        //                 cout << goal_parking_mat[i*locations+j] << " ";
-        //         }
-        //         cout << endl;
-        // }
-
         for (int i = 0; i < lane_number; i++) {
                 for (int j = 0; j < locations; j++) {
                         if(init_parking_mat[i*locations+j]=="__") {
@@ -343,9 +333,88 @@ int main(int argc, char const *argv[]) {
                 cout << "Configuration unfeasible. No free slots." << endl;
                 return 0;
         }
+        vector <string> path;
+        path = astar(init_parking_mat, goal_parking_mat, lane_number, locations);
+        vector <int> gscores;
+        int sol_gscore_size = stoi(path[path.size()-1]);
+        path.erase(path.begin()+path.size()-1);
+        for(int i = 0; i < sol_gscore_size; i++){
+          gscores.push_back(stoi(path[path.size()-1]));
+          path.erase(path.begin()+path.size()-1);
+        }
+        int totalcost = stoi(path[path.size()-1]);
+        path.erase(path.begin()+path.size()-1);
+        int expansions = stoi(path[path.size()-1]);
+        path.erase(path.begin()+path.size()-1);
 
-        astar(init_parking_mat, goal_parking_mat, lane_number, locations);
+        cout << endl;
         cout << "CONGRATULATIONS, FINAL CONFIGURATION FOUND!" << endl;
+        cout << "The path is:" << endl;
+
+        cout << endl;
+
+        cout << "The goal is:" << endl;
+
+        cout << endl;
+
+        int printcounter = 0;
+
+        while (printcounter<path.size()) {
+          cout << path[printcounter] << " ";
+          printcounter++;
+          if((printcounter%locations)==0){
+            cout << endl;
+          }
+          if((printcounter%(locations*lane_number))==0){
+            cout << endl;
+          }
+        }
+
+        number_steps=path.size()/(locations*lane_number);
+
+        cout << endl;
+
+        cout << "The initial is:" << endl;
+
+        cout << endl;
+
+        for(int i = 0; i < lane_number; i++){
+          for(int j = 0; j < locations; j++){
+            cout << init_parking_mat[i*locations+j] << " ";
+          }
+          cout << endl;
+        }
+
+        ofstream plan;
+        plan.open("plan.plan");
+
+        vector <string> vec_1;
+        vector <string> vec_2;
+
+        for(int i = 0; i < sol_gscore_size; i++){
+          if(i==0){
+            plan << i+1 << ", " << gscores[i] << endl;
+          }
+          else{
+            plan << i+1 << ", " << gscores[i]-gscores[i-1] << endl;
+          }
+
+        }
+
+        plan.close();
+
+        ofstream information;
+        information.open ("information.info");
+
+        information << "Step length: " << number_steps << endl;
+        auto t2 = clk::now();
+        auto diff = std::chrono::duration_cast<std::chrono::seconds>(t2-t1);
+        information << "Running time (seconds): " << diff.count() << endl;
+        information << "Total cost: " << totalcost << endl;
+        information << "Expansions: " << expansions << endl;
+
+        information.close();
+
 
         return 0;
 }
