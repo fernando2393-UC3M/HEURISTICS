@@ -171,7 +171,7 @@ vector <string> astar(vector <string> init_parking_mat, vector <string> goal_par
                  }
                  for(int i = 0; i < closed_set.size(); i++){
                    if(current_vec.parent_node==closed_set[i].id){
-                     solution_gscore.push_back(to_string(current_vec.gscore));
+                     solution_gscore.push_back(to_string(current_vec.gscore-closed_set[i].hscore));
                      current_vec = closed_set[i];
                    }
                  }
@@ -400,6 +400,8 @@ int main(int argc, char const *argv[]) {
           }
 
         }
+
+        
 
         plan.close();
 
