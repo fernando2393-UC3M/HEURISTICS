@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.jacop.core.BooleanVar;
 import org.jacop.core.Store;
@@ -14,6 +15,7 @@ import org.jacop.search.SelectChoicePoint;
 import org.jacop.search.SimpleSelect;
 import org.jacop.search.SmallestDomain;
 import org.jacop.constraints.*;
+
 
 
 /*javac -classpath .:jacop-4.3.0.jar SATParking.java*/
@@ -117,6 +119,8 @@ public static void main(String[] args) {
                 BooleanVar lowerArr_bh[][] = new BooleanVar[lane_number][locations];
                 int lowerArr_bh_lit[][] = new int[lane_number][locations];
 
+  //Aux matrix for printing
+                char printArr[][] = new char[lane_number][locations];
 
                 //Now we establish variables and clauses
 
@@ -171,6 +175,7 @@ public static void main(String[] args) {
 				//FRONT
 				if(categories[i][k+1].charAt(0)=='0'){ //NOT BLOCKED
 					addClause(satWrapper, empty_fr_lit[i][k]);
+          printArr[i][k]='>';
 					System.out.println("Adding empty_fr_lit["+i+"]["+k+"]");
 				}
 				else{ //BLOCKED
@@ -179,6 +184,7 @@ public static void main(String[] args) {
 					if(categories[i][k].charAt(0)>categories[i][k+1].charAt(0)){ //NOT BLOCKED
 						addClause(satWrapper, lowerCat_fr_lit[i][k]);
 						addClause(satWrapper, -equalCat_fr_lit[i][k]);
+            printArr[i][k]='>';
 						System.out.println("Adding lowerCat_fr_lit["+i+"]["+k+"]");
 					}
 					else if(categories[i][k].charAt(0)==categories[i][k+1].charAt(0)){
@@ -186,17 +192,19 @@ public static void main(String[] args) {
 						addClause(satWrapper, equalCat_fr_lit[i][k]);
 						if(arrival[i][k].charAt(0)>arrival[i][k+1].charAt(0)){ //NOT BLOCKED
 							addClause(satWrapper, lowerArr_fr_lit[i][k]);
+              printArr[i][k]='>';
 							System.out.println("Adding lowerArr_fr_lit["+i+"]["+k+"]");
-						}	
+						}
 						else{ //BLOCKED
 							addClause(satWrapper, -lowerArr_fr_lit[i][k]);
 							System.out.println("Adding lowerArr_fr_lit["+i+"]["+k+"] BLOCKED");
-						}			
+						}
 					}
 					else{ //BLOCKED
 						addClause(satWrapper, -lowerCat_fr_lit[i][k]);
 						addClause(satWrapper, -equalCat_fr_lit[i][k]);
 						addClause(satWrapper, -lowerArr_fr_lit[i][k]);
+            printArr[i][k]='>';
 						System.out.println("Adding lowerCat_fr_lit["+i+"]["+k+"] BLOCKED");
 					}
 				}
@@ -204,6 +212,7 @@ public static void main(String[] args) {
 				//BEHIND
 				if(categories[i][k-1].charAt(0)=='0'){ //NOT BLOCKED
 					addClause(satWrapper, empty_bh_lit[i][k]);
+          printArr[i][k]='<';
 					System.out.println("Adding empty_bh_lit["+i+"]["+k+"]");
 				}
 				else{ //BLOCKED
@@ -212,6 +221,7 @@ public static void main(String[] args) {
 					if(categories[i][k].charAt(0)>categories[i][k-1].charAt(0)){ //NOT BLOCKED
 						addClause(satWrapper, lowerCat_bh_lit[i][k]);
 						addClause(satWrapper, -equalCat_bh_lit[i][k]);
+            printArr[i][k]='<';
 						System.out.println("Adding lowerCat_bh_lit["+i+"]["+k+"]");
 					}
 					else if(categories[i][k].charAt(0)==categories[i][k-1].charAt(0)){
@@ -219,12 +229,13 @@ public static void main(String[] args) {
 						addClause(satWrapper, equalCat_bh_lit[i][k]);
 						if(arrival[i][k].charAt(0)>arrival[i][k-1].charAt(0)){ //NOT BLOCKED
 							addClause(satWrapper, lowerArr_bh_lit[i][k]);
+              printArr[i][k]='<';
 							System.out.println("Adding lowerArr_bh_lit["+i+"]["+k+"]");
-						}	
+						}
 						else{ //BLOCKED
 							addClause(satWrapper, -lowerArr_bh_lit[i][k]);
 							System.out.println("Adding lowerArr_bh_lit["+i+"]["+k+"] BLOCKED");
-						}			
+						}
 					}
 					else{ //BLOCKED
 						addClause(satWrapper, -lowerCat_bh_lit[i][k]);
@@ -251,56 +262,42 @@ public static void main(String[] args) {
                 for (int i = 0; i < lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = empty_fr[i][k];
-//				System.out.println("Matrix 1: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = lane_number; i < 2*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = empty_bh[i-lane_number][k];
-//				System.out.println("Matrix 2: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 2*lane_number; i < 3*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = edge[i-2*lane_number][k];
-//				System.out.println("Matrix 3: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 3*lane_number; i < 4*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = lowerCat_fr[i-3*lane_number][k];
-//				System.out.println("Matrix 4: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 4*lane_number; i < 5*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = lowerCat_bh[i-4*lane_number][k];
-//				System.out.println("Matrix 5: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 5*lane_number; i < 6*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = equalCat_fr[i-5*lane_number][k];
-//				System.out.println("Matrix 6: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 6*lane_number; i < 7*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = equalCat_bh[i-6*lane_number][k];
-//				System.out.println("Matrix 7: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
@@ -308,16 +305,12 @@ public static void main(String[] args) {
                 for (int i = 7*lane_number; i < 8*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = lowerArr_fr[i-7*lane_number][k];
-//				System.out.println("Matrix 8: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
                 for (int i = 8*lane_number; i < 9*lane_number; i++) {
                         for (int k=0; k < (locations); k++) {
                                 allVariables[i*locations+k] = lowerArr_bh[i-8*lane_number][k];
-//				System.out.println("Matrix 9: i= "+i+"; j= "+k);
-//				System.out.println("allVariables["+ (i*locations+k) +"]= "+allVariables[i*locations+k]);
                         }
                 }
 
@@ -327,7 +320,7 @@ public static void main(String[] args) {
 
                 Search<BooleanVar> search = new DepthFirstSearch<BooleanVar>();
                 SelectChoicePoint<BooleanVar> select = new SimpleSelect<BooleanVar>(allVariables, new SmallestDomain<BooleanVar>(), new IndomainMin<BooleanVar>());
-                
+
 		Boolean result = search.labeling(store, select);
 
 
@@ -373,15 +366,25 @@ public static void main(String[] args) {
                                         }
                                 }
                         }
-                }
 
+                        PrintWriter writer = new PrintWriter("outputJacop.txt", "UTF-8");
+                        for(int i=0; i<lane_number; i++){
+                          for(int k=0; k<locations; k++){
+                            if(categories[i][k].charAt(0)!=0){ //If there is a car
+                              writer.println(printArr[i][k]);
+                            }
+                            else{
+                              writer.println('_');
+                            }
+                        }
+                        writer.println("\n");
+                      }
+                      writer.close();
+                }
                 else{
                         System.out.println("NO Satisfiable problem");
                 }
-
-
         }
-
         catch(IOException ex) {
                 System.out.println("Error reading file '" + filename + "'");
         }
