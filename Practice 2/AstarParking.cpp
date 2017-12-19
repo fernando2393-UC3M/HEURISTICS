@@ -171,7 +171,7 @@ vector <string> astar(vector <string> init_parking_mat, vector <string> goal_par
                  }
                  for(int i = 0; i < closed_set.size(); i++){
                    if(current_vec.parent_node==closed_set[i].id){
-                     solution_gscore.push_back(to_string(current_vec.gscore-closed_set[i].hscore));
+                     solution_gscore.push_back(to_string(current_vec.gscore-closed_set[i].gscore));
                      current_vec = closed_set[i];
                    }
                  }
@@ -347,61 +347,27 @@ int main(int argc, char const *argv[]) {
         int expansions = stoi(path[path.size()-1]);
         path.erase(path.begin()+path.size()-1);
 
-        cout << endl;
-        cout << "CONGRATULATIONS, FINAL CONFIGURATION FOUND!" << endl;
-        cout << "The path is:" << endl;
-
-        cout << endl;
-
-        cout << "The goal is:" << endl;
-
-        cout << endl;
-
         int printcounter = 0;
 
-        while (printcounter<path.size()) {
-          cout << path[printcounter] << " ";
-          printcounter++;
-          if((printcounter%locations)==0){
-            cout << endl;
-          }
-          if((printcounter%(locations*lane_number))==0){
-            cout << endl;
-          }
-        }
-
         number_steps=path.size()/(locations*lane_number);
-
-        cout << endl;
-
-        cout << "The initial is:" << endl;
-
-        cout << endl;
-
-        for(int i = 0; i < lane_number; i++){
-          for(int j = 0; j < locations; j++){
-            cout << init_parking_mat[i*locations+j] << " ";
-          }
-          cout << endl;
-        }
 
         ofstream plan;
         plan.open("plan.plan");
 
-        vector <string> vec_1;
-        vector <string> vec_2;
+        int gscores_sum = 0;
+
+        for(int i = 0; i < sol_gscore_size; i++){
+            gscores_sum += gscores[i];
+        }
+
+        gscores_sum = totalcost - gscores_sum;
 
         for(int i = 0; i < sol_gscore_size; i++){
           if(i==0){
-            plan << i+1 << ", " << gscores[i] << endl;
+            plan << i+1 << ", " << gscores_sum << endl;
           }
-          else{
-            plan << i+1 << ", " << gscores[i]-gscores[i-1] << endl;
-          }
-
+            plan << i+2 << ", " << gscores[i] << endl;
         }
-
-        
 
         plan.close();
 
