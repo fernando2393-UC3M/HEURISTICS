@@ -1,3 +1,3 @@
-# HEURISTICS
+# Heuristics and Optimization
 
-Different practices from the subject Heuristics and Optimization from the UC3M.
+Projects of the UC3M Heuristics and Optimization course. 
